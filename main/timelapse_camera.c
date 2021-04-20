@@ -7,6 +7,7 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "esp_spi_flash.h"
+#include "esp_sleep.h"
 
 #include "esp_vfs.h"
 #include "esp_vfs_fat.h"
@@ -47,6 +48,9 @@ static const char *TAG = "tcam";
 
 #endif
 
+#define CAPTURE_INTERVAL_SECONDS 20u
+
+RTC_DATA_ATTR uint32_t img_cnt = 0u;
 
 void camera_task() {
     camera_config_t camera_config = {
@@ -130,7 +134,7 @@ void camera_task() {
 
     if(ret != ESP_OK) {
         if(ret == ESP_FAIL) {
-            ESP_LOGE(TAG, "Init_SD: Failed to mount filesystem.");
+           ESP_LOGE(TAG, "Init_SD: Failed to mount filesystem.");
         } else {
            ESP_LOGE(TAG, "Init_SD: Failed to initialize the card. %d", ret);
         }
@@ -140,7 +144,6 @@ void camera_task() {
     sdmmc_card_print_info(stdout, card);
 
     mkdir("/sdcard/timelapse", 0775);
-    uint32_t img_cnt = 0u;
 
     while(1) {
         ESP_LOGI(TAG, "Capturing image...");
@@ -159,7 +162,11 @@ void camera_task() {
             ESP_LOGI(TAG, "SD: File written (%s)", filename);
         }
 
-        vTaskDelay(5000 / portTICK_PERIOD_MS);
+        esp_vfs_fat_sdcard_unmount("/sdcard", card);
+
+        ESP_LOGI(TAG, "Starting deep sleep for %ds seconds\n", CAPTURE_INTERVAL_SECONDS);
+        esp_sleep_enable_timer_wakeup(CAPTURE_INTERVAL_SECONDS * 1000000);
+        esp_deep_sleep_start();
     }
 }
 

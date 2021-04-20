@@ -15,42 +15,12 @@
 #include "sdmmc_cmd.h"
 
 #include "esp_camera.h"
+#include "config.h"
+
+
 static const char *TAG = "tcam";
-#define BOARD_ESP32CAM_AITHINKER
-//#define SD_MODE_SDMMC
-
-
-#define PIN_NUM_SD_MISO 2
-#define PIN_NUM_SD_MOSI 15
-#define PIN_NUM_SD_CLK  14
-#define PIN_NUM_SD_CS   13
-
-
-#ifdef BOARD_ESP32CAM_AITHINKER
-
-#define CAM_PIN_PWDN 32
-#define CAM_PIN_RESET -1
-#define CAM_PIN_XCLK 0
-#define CAM_PIN_SIOD 26
-#define CAM_PIN_SIOC 27
-
-#define CAM_PIN_D7 35
-#define CAM_PIN_D6 34
-#define CAM_PIN_D5 39
-#define CAM_PIN_D4 36
-#define CAM_PIN_D3 21
-#define CAM_PIN_D2 19
-#define CAM_PIN_D1 18
-#define CAM_PIN_D0 5
-#define CAM_PIN_VSYNC 25
-#define CAM_PIN_HREF 23
-#define CAM_PIN_PCLK 22
-
-#endif
-
-#define CAPTURE_INTERVAL_SECONDS 20u
-
 RTC_DATA_ATTR uint32_t img_cnt = 0u;
+
 
 void camera_task() {
     camera_config_t camera_config = {
@@ -72,16 +42,15 @@ void camera_task() {
         .pin_href = CAM_PIN_HREF,
         .pin_pclk = CAM_PIN_PCLK,
 
-        //XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)
         .xclk_freq_hz = 20000000,
         .ledc_timer = LEDC_TIMER_0,
         .ledc_channel = LEDC_CHANNEL_0,
 
-        .pixel_format = PIXFORMAT_JPEG, //YUV422,GRAYSCALE,RGB565,JPEG
+        .pixel_format = PIXFORMAT_JPEG, /* YUV422,GRAYSCALE,RGB565,JPEG */
         .frame_size = FRAMESIZE_UXGA,   /* 1600x1200 */
 
-        .jpeg_quality = 12, //0-63 lower number means higher quality
-        .fb_count = 1       //if more than one, i2s runs in continuous mode. Use only with JPEG
+        .jpeg_quality = 12, /* 0-63 lower number means higher quality */
+        .fb_count = 1       /* if more than one, i2s runs in continuous mode. Use only with JPEG */
     };
 
     esp_err_t err = esp_camera_init(&camera_config);
